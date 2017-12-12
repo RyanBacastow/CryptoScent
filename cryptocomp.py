@@ -5,6 +5,7 @@ import numpy as np
 
 coin_response = requests.get('https://min-api.cryptocompare.com/data/all/coinlist')
 coinlist_json = coin_response.json()
+global coinlist
 coinlist= pd.DataFrame(coinlist_json['Data'])
 coinlist = coinlist.transpose()
 #def coin_correlation(df):
@@ -21,8 +22,14 @@ coinlist = coinlist.transpose()
 #        return 'NA'
 #coinlist['Volume to Price Correlation'] = coinlist.apply(coin_correlation, axis = 1)
 #print(coinlist.head())
-data_1 = coinlist[:501]
-data_2 = coinlist[500:1000]
-print(data_1.tail(1))
-print(data_2.head(1))
-
+params = {'fsym':'BTC', 'tsym':'USD', 'limit': 2000}
+btc_price_response = requests.get('https://min-api.cryptocompare.com/data/histoday', params=params)
+btc_price = btc_price_response.json()
+btc_price_df = pd.DataFrame(btc_price['Data'])
+btc_price_df['Average Price'] = btc_price_df[['open','close','high','low']].mean(axis=1)
+params = {'fsym':'LTC', 'tsym':'USD', 'limit': 2000}
+ltc_price_response = requests.get('https://min-api.cryptocompare.com/data/histoday', params=params)
+ltc_price = ltc_price_response.json()
+ltc_price_df = pd.DataFrame(ltc_price['Data'])
+ltc_price_df['Average Price'] = btc_price_df[['open','close','high','low']].mean(axis=1)
+print(btc_price_df['Average Price'].corr(ltc_price_df['Average Price']))
