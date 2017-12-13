@@ -9,6 +9,7 @@ global coinlist
 coinlist= pd.DataFrame(coinlist_json['Data'])
 coinlist = coinlist.transpose()
 print('coin list generated')
+master_hist_df = pd.DataFrame()
 #def coin_correlation(df):
 #    try:
 #        params = {'fsym':df['Name'], 'tsym':'USD', 'limit': 2000}
@@ -18,6 +19,12 @@ print('coin list generated')
 #        hist_price_df = pd.DataFrame(hist_price['Data'])
 #        hist_price_df['Average Price'] = hist_price_df[['open','close','high','low']].mean(axis=1)
 #        hist_price_df['Average Volume'] = hist_price_df[['volumefrom', 'volumeto']].mean(axis=1)
+#        hist_price_df = hist_price_df.rename(columns={'open':df['Name']+'_open','close':df['Name']+'_close',\
+#                                                      'high':df['Name']+'_high','low':df['Name']+'_low',\
+#                                                      'volumefrom':df['Name']+'_volumefrom',\
+#                                                      'volumeto':df['Name']+'_volumeto',\
+#                                                      'Average Price':df['Name']+'_Average Price',\
+#                                                      'Average Volume':df['Name']+'_Average Volume'})
 #        return hist_price_df['Average Price'].corr(hist_price_df['Average Volume'])
 #    except KeyError:
 #        return 'NA'
