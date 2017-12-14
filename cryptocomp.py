@@ -25,11 +25,12 @@ master_hist_df = pd.DataFrame()
 #                                                      'volumeto':df['Name']+'_volumeto',\
 #                                                      'Average Price':df['Name']+'_Average Price',\
 #                                                      'Average Volume':df['Name']+'_Average Volume'})
+#        master_hist_df = master_hist_df.append(hist_price_df)               
 #        return hist_price_df['Average Price'].corr(hist_price_df['Average Volume'])
 #    except KeyError:
 #        return 'NA'
 #coinlist['Volume to Price Correlation'] = coinlist.apply(coin_correlation, axis = 1)
-##print(coinlist.head())
+#print(coinlist.head())
 print('starting test')
 params = {'fsym':'BTC', 'tsym':'USD', 'limit': 2000}
 btc_price_response = requests.get('https://min-api.cryptocompare.com/data/histoday', params=params)
@@ -38,14 +39,24 @@ btc_price_df = pd.DataFrame(btc_price['Data'])
 btc_price_df['Average Price'] = btc_price_df[['open','close','high','low']].mean(axis=1)
 name = 'BTC'
 ##Eureka! Create empty dataframe, append each new DF with name of ticker as below
-btc_price_df = btc_price_df.rename(columns={"open":name+"_open"})
-print(btc_price_df.head())
-#params = {'fsym':'LTC', 'tsym':'USD', 'limit': 2000}
-#ltc_price_response = requests.get('https://min-api.cryptocompare.com/data/histoday', params=params)
-#ltc_price = ltc_price_response.json()
-#ltc_price_df = pd.DataFrame(ltc_price['Data'])
-#ltc_price_df['Average Price'] = ltc_price_df[['open','close','high','low']].mean(axis=1)
-
+btc_price_df = btc_price_df.rename(columns={"open":name+"_open",'close':name+'_close','high':name+'_high',\
+                                            'low':name+'_low','volumefrom':name+'_volumefrom','volumeto':name+'_volumeto',\
+                                            'Average Price':name+'_Average Price','time':name+'_time'})
+master_hist_df = pd.concat([master_hist_df,btc_price_df], ignore_index=True,axis =1)
+#print(master_hist_df.describe())
+params = {'fsym':'LTC', 'tsym':'USD', 'limit': 2000}
+ltc_price_response = requests.get('https://min-api.cryptocompare.com/data/histoday', params=params)
+ltc_price = ltc_price_response.json()
+ltc_price_df = pd.DataFrame(ltc_price['Data'])
+ltc_price_df['Average Price'] = ltc_price_df[['open','close','high','low']].mean(axis=1)
+namel = 'LTC'
+ltc_price_df = ltc_price_df.rename(columns={"open":namel+"_open",'close':namel+'_close','high':namel+'_high',\
+                                            'low':namel+'_low','volumefrom':namel+'_volumefrom','volumeto':namel+'_volumeto',\
+                                            'Average Price':namel+'_Average Price','time':namel+'_time'})
+master_hist_df = pd.concat([master_hist_df ,ltc_price_df], ignore_index=True,axis=1)
+print(master_hist_df.head())
+#master_hist_df = master_hist_df.append(ltc_price_df, ignore_index=True)
+#print(master_hist_df.head())
 #params = {'fsym':'ETH', 'tsym':'USD', 'limit': 2000}
 #eth_price_response = requests.get('https://min-api.cryptocompare.com/data/histoday', params=params)
 #eth_price = eth_price_response.json()
