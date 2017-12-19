@@ -1,26 +1,96 @@
-import os
-import codecs
-import json
-from twitterscraper import query_tweets
-from twitterscraper.query import query_all_tweets
+from twitter import *
 import pandas as pd
-import numpy as np
+from datetime import datetime as dt
+import time
+import glob
+import os
+import sys
+import json
+import pdb
+import twitter
 
-df = pd.DataFrame()
+def oauth_login():
+    # XXX: Go to http://twitter.com/apps/new to create an app and get values
+    # for these credentials that you'll need to provide in place of these
+    # empty string values that are defined as placeholders.
+    # See https://dev.twitter.com/docs/auth/oauth for more information
+    # on Twitter's OAuth implementation.
 
-def main():
-    keyword = input("What words would you like to search for?\n")
-    number = int(input("How many tweets would you like me to filter through?\n"))
-    fname = input("Name your output file.\n")
-    fname = fname + '.json'
-    query = 'twitterscraper {} -l {} -o {}'.format(keyword, number,fname)
-    os.system(query)
-    with codecs.open(fname,'r','utf-8') as f:
-        tweets = json.load(f, encoding='utf-8')
-        for tweet in tweets:
-            if int(tweet['likes'])> 1 or int(tweet['retweets']) > 1:
-                print(tweet['text'],'\n')
-        df.append([tweet['text']])
-        
-if __name__ == '__main__':
-    main()
+    CONSUMER_KEY = '3vhPtpq5VjXpz1SVh3z2nc1Gu'
+    CONSUMER_SECRET = 'vW223v1O7537APiEsPq2U52oLsqtcZMEZzoSoHanBE6hIiQo9U'
+    OAUTH_TOKEN = '941412073392701442-x7cBQoqEx8g81iRj2BlqQ5sIz9MNHbT'
+    OAUTH_TOKEN_SECRET = 'NiWLPN8lfPa7GOGwbQ8TetlqWVp7JFf1XXHbuUoq0c1Tz'
+
+    auth = twitter.oauth.OAuth(OAUTH_TOKEN, OAUTH_TOKEN_SECRET, CONSUMER_KEY, CONSUMER_SECRET)
+
+    twitter_api = twitter.Twitter(auth=auth)
+    return twitter_api
+
+# Twitter search function to get a number of tweets using a search query
+def TwitterSearch(twitterApi, query, approxCount = 3000, **kw):
+    searchResults = twitterApi.search.tweets(q= query, count=100, **kw)
+    statuses = searchResults['statuses']
+    while len(statuses) < approxCount:
+        try:
+            nextResults = searchResults['search_metadata']['next_results']
+        except KeyError as e:
+            break
+        print( str(len(statuses)) + ' results have been downloaded from approximately ' + str(approxCount))
+        kwargs = dict([ kv.split('=') for kv in nextResults[1:].split("&") ])
+        nextResults = twitter_api.search.tweets(**kwargs)
+        statuses += nextResults['statuses'] # cool append notation
+        print( 'A total of ' + str(len(statuses)) + ' have been downloaded')
+    return statuses
+
+dir=(r'./')
+
+twitter_api = oauth_login()
+
+q = input("What would you like to search?\n")
+
+status = TwitterSearch(twitter_api, q, approxCount = 2000)
+status2 = TwitterSearch(twitter_api, q, approxCount = 2000)
+statuses= status + status2
+
+# # Show one sample search status by slicing the list...
+# print( json.dumps(statuses[0], indent=1))
+
+
+# for _ in range(30):
+	# print( "Length of statuses", len(statuses))
+	# try:
+		# next_statuses = search_statuses['search_metadata']['next_statuses']
+	# except KeyError, e: # No more statuses when next_statuses doesn't exist
+		# break
+
+# kwargs = dict([ kv.split('=') for kv in next_statuses[1:].split("&") ])
+# search_statuses = twitter_api.search.tweets(**kwargs)
+
+status_id = [status['id'] for status in statuses ]
+name = [status['user']['name'] for status in statuses ]
+screen_name = [status['user']['screen_name'] for status in statuses ]
+status_text = [status['text'] for status in statuses ]
+location = [status['user']['location'] for status in statuses ]
+geo = [status['geo']for status in statuses ]
+time_zone = [status['user']['time_zone']for status in statuses ]
+friend_count =  [status['user']['friends_count'] for status in statuses]
+follower_count = [status['user']['followers_count'] for status in statuses]
+tmstamp = [status['created_at'] for status in statuses]
+retweet_ct = [status['retweet_count'] for status in statuses]
+source = [status['source'] for status in statuses]
+place = [status['place'] for status in statuses]
+data = {'status_id' : status_id,
+        'name' : name,
+        'screen_name' : screen_name,
+        'status_text' : status_text,
+        'tmstamp' : tmstamp,
+        'time_zone' : time_zone,
+        'location' : location,
+        'geo' : geo,
+        'friend_count' : friend_count,
+        'follower_count' : follower_count,
+        'retweet_count' : retweet_ct,
+        'source' : source,
+        'place' : place}
+df = pd.DataFrame(data)
+df.to_csv(dir + q + str(time.strftime("%d_%m_%Y")) + '.csv', encoding = 'utf-8')
