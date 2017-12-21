@@ -6,6 +6,7 @@ import glob
 import os
 import sys
 import json
+import simplejson
 import pdb
 import twitter
 
@@ -26,7 +27,6 @@ def oauth_login():
     twitter_api = twitter.Twitter(auth=auth)
     return twitter_api
 
-# Twitter search function to get a number of tweets using a search query
 def TwitterSearch(twitterApi, query, approxCount = 3000, **kw):
     searchResults = twitterApi.search.tweets(q= query, count=100, **kw)
     statuses = searchResults['statuses']
@@ -46,15 +46,11 @@ dir=(r'./')
 
 twitter_api = oauth_login()
 
-q = input("What would you like to search?\n")
+q = input("What would you like to search for(ex: BTC, ETH, XRP, IOTA)?\n")
 
-status = TwitterSearch(twitter_api, q, approxCount = 2000)
-status2 = TwitterSearch(twitter_api, q, approxCount = 2000)
-statuses= status + status2
+statuses = TwitterSearch(twitter_api, q, approxCount = 2000)
 
-# # Show one sample search status by slicing the list...
-# print( json.dumps(statuses[0], indent=1))
-
+json_dump = json.dumps(statuses)
 
 # for _ in range(30):
 	# print( "Length of statuses", len(statuses))
@@ -66,7 +62,7 @@ statuses= status + status2
 # kwargs = dict([ kv.split('=') for kv in next_statuses[1:].split("&") ])
 # search_statuses = twitter_api.search.tweets(**kwargs)
 
-status_id = [status['id'] for status in statuses ]
+status_id = [status['id'] for status in statuses]
 name = [status['user']['name'] for status in statuses ]
 screen_name = [status['user']['screen_name'] for status in statuses ]
 status_text = [status['text'] for status in statuses ]
@@ -79,6 +75,7 @@ tmstamp = [status['created_at'] for status in statuses]
 retweet_ct = [status['retweet_count'] for status in statuses]
 source = [status['source'] for status in statuses]
 place = [status['place'] for status in statuses]
+
 data = {'status_id' : status_id,
         'name' : name,
         'screen_name' : screen_name,
@@ -92,5 +89,24 @@ data = {'status_id' : status_id,
         'retweet_count' : retweet_ct,
         'source' : source,
         'place' : place}
-df = pd.DataFrame(data)
-df.to_csv(dir + q + str(time.strftime("%d_%m_%Y")) + '.csv', encoding = 'utf-8')
+
+relevant_data = {
+        'name' : name,
+        'status_text' : status_text,
+        'retweet_count' : retweet_ct,
+        'follower_count' : follower_count,
+        'tmstamp' : tmstamp
+        }
+
+df = pd.DataFrame(relevant_data)
+fname = dir + q + str(dt.now().strftime("%Y-%m-%d_%H-%M-%S"))
+
+yes_no = input("Would you like to save the output as a csv for storage? y/n \n")
+if yes_no == "y":
+    df.to_csv('{}.csv'.format(fname), encoding = 'utf-8')
+    twitterDataFile = open("{}.json".format(fname), "w")
+    twitterDataFile.write(json.dumps(json.loads(json_dump), indent=4, sort_keys=True))
+    twitterDataFile.close()
+    print("Saved as {}{} and {}{}".format(fname, '.csv', fname, '.json'))
+if yes_no == "n":
+    print("Okay. Have a nice day.")
