@@ -5,7 +5,7 @@ import boto3
 coin_response = requests.get('https://min-api.cryptocompare.com/data/all/coinlist')
 coinlist_json = coin_response.json()
 coinlist = coinlist_json['Data']
-## The below hased out function created the table, it will not work if ran again as
+## The below function created the table, it will not work if ran again as
 ##the table already exists
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.create_table(
