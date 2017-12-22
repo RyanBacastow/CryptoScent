@@ -5,8 +5,7 @@ import numpy as np
 
 coin_response = requests.get('https://min-api.cryptocompare.com/data/all/coinlist')
 coinlist_json = coin_response.json()
-global coinlist
-coinlist= pd.DataFrame(coinlist_json['Data'])
+coinlist = pd.DataFrame(coinlist_json['Data'])
 coinlist = coinlist.transpose()
 vol_price = {}
 concating_frames = []
@@ -41,6 +40,8 @@ for ticker in coinlist['Name']:
         continue
 corr_matrix_df = pd.concat(correlation_concate, axis=1)
 corr_matrix_df = corr_matrix_df.pct_change().corr(method='pearson')
+colnames= list(corr_matrix_df.columns.values)
+corr_matrix_df.insert(loc=0, column='Index', value=colnames)
 coinlist.to_csv('coinlist.csv', encoding='utf-8', index=False)
 master_hist_df.to_csv('master_hist_df.csv', encoding='utf-8', index=False)
 corr_matrix_df.to_csv('corr_matrix.csv', encoding='utf-8', index=False)
