@@ -102,11 +102,14 @@ df = pd.DataFrame(relevant_data)
 fname = dir + q + str(dt.now().strftime("%Y-%m-%d_%H-%M-%S"))
 
 yes_no = input("Would you like to save the output as a csv for storage? y/n \n")
-if yes_no == "y":
+if yes_no.lower() == "y" or "yes":
+    with codecs.open(fname,'r','utf-8') as f:
+        tweets = json.load(f, encoding='utf-8')
+        print(tweets[2])
     df.to_csv('{}.csv'.format(fname), encoding = 'utf-8')
-    twitterDataFile = open("{}.json".format(fname), "w")
-    twitterDataFile.write(json.dumps(json.loads(json_dump), indent=4, sort_keys=True))
-    twitterDataFile.close()
+    with codecs.open(fname+'.json','r','utf-8') as f:
+        f.write(json.dumps(json.loads(json_dump), indent=4, sort_keys=True))
+        f.close()
     print("Saved as {}{} and {}{}".format(fname, '.csv', fname, '.json'))
-if yes_no == "n":
-    print("Okay. Have a nice day.")
+else:
+    "The file will not be saved."
